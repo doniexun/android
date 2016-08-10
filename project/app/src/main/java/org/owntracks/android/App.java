@@ -7,7 +7,9 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.owntracks.android.activities.ActivityMap;
-import org.owntracks.android.activities.ActivityStatus;
+import org.owntracks.android.clean.injection.components.AppComponent;
+import org.owntracks.android.clean.injection.components.DaggerAppComponent;
+import org.owntracks.android.clean.injection.modules.AppModule;
 import org.owntracks.android.db.Dao;
 import org.owntracks.android.model.ContactsViewModel;
 import org.owntracks.android.model.FusedContact;
@@ -28,6 +30,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.BatteryManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -37,7 +40,10 @@ import android.provider.Settings.Secure;
 import android.text.format.DateUtils;
 import android.util.Log;
 
+import javax.inject.Inject;
+
 import de.greenrobot.event.EventBus;
+import io.realm.Realm;
 import timber.log.Timber;
 
 public class App extends Application  {
@@ -65,6 +71,13 @@ public class App extends Application  {
         return fusedContacts;
     }
 
+
+
+
+    @Inject EventBus mEventBus;
+    private static AppComponent sAppComponent = null;
+    private static App sInstance = null;
+
     @Override
 	public void onCreate() {
 		super.onCreate();
@@ -74,10 +87,16 @@ public class App extends Application  {
                 @Override
                 protected String createStackElementTag(StackTraceElement element) {
                     return super.createStackElementTag(element) + "/" + element.getMethodName() + "/" + element.getLineNumber();
-
                 }
             });
         }
+
+        sInstance = this;
+        sAppComponent = DaggerAppComponent.builder()
+                .appModule(new AppModule(this))
+                .build();
+        mEventBus.register(this);
+
 
         instance = this;
         dateFormater = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", getResources().getConfiguration().locale);
@@ -115,6 +134,19 @@ public class App extends Application  {
 
     }
 
+    public static App get(Context context) {
+        return (App) context.getApplicationContext();
+    }
+
+    public static App getInstance() { return sInstance; }
+
+    public static AppComponent getAppComponent() { return sAppComponent; }
+
+    public static Realm getRealm() { return sAppComponent.realm(); }
+
+    public static Resources getRes() { return sInstance.getResources(); }
+
+
 
     public static void enableForegroundBackgroundDetection() {
         instance.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
@@ -126,9 +158,6 @@ public class App extends Application  {
     public static Context getContext() {
 		return instance;
 	}
-    public static App getInstance() {
-        return instance;
-    }
 
     public static FusedContact getFusedContact(String topic) {
         return fusedContacts.get(topic);

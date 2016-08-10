@@ -18,7 +18,7 @@ import org.owntracks.android.activities.ActivityBase;
 import org.owntracks.android.activities.ActivityContacts;
 import org.owntracks.android.activities.ActivityMap;
 import org.owntracks.android.activities.ActivityPreferences;
-import org.owntracks.android.activities.ActivityStatus;
+import org.owntracks.android.clean.ui.status.ActivityStatus;
 import org.owntracks.android.activities.ActivityRegions;
 
 public class DrawerProvider {

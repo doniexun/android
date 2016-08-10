@@ -28,12 +28,17 @@ import android.util.Log;
 
 import de.greenrobot.event.EventBus;
 
+import org.owntracks.android.clean.injection.qualifier.AppContext;
 import org.owntracks.android.db.Dao;
 import org.owntracks.android.db.Waypoint;
 import org.owntracks.android.db.WaypointDao;
 import org.owntracks.android.messages.MessageConfiguration;
 import org.owntracks.android.messages.MessageWaypoint;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class Preferences {
     private static final String TAG = "Preferences";
 
@@ -61,7 +66,19 @@ public class Preferences {
         return deviceUUID;
     }
 
+    static boolean needsInit = true;
+    @Inject
+    public Preferences(@AppContext Context context) {
+        if(needsInit)
+            initialize(context);
+    }
+
     public static void initialize(Context c){
+        if(!needsInit)
+            return;
+        else
+            needsInit = false;
+
         Log.v(TAG, "preferences initializing");
         activeSharedPreferencesChangeListener = new LinkedList<>();
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(c); // only used for modeId and firstStart keys
